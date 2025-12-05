@@ -1,9 +1,10 @@
 """
-Settings UI for configuration
+Settings UI for configuration - Modern dark theme
 """
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                               QLineEdit, QComboBox, QPushButton, QGroupBox,
-                              QSpinBox, QMessageBox, QFormLayout, QApplication)
+                              QSpinBox, QMessageBox, QFormLayout, QApplication,
+                              QFrame)
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 
 
@@ -61,7 +62,7 @@ class OllamaTestThread(QThread):
 
 
 class SettingsWidget(QWidget):
-    """Settings configuration UI"""
+    """Settings configuration UI with modern dark theme"""
     
     def __init__(self, config_manager):
         super().__init__()
@@ -71,12 +72,111 @@ class SettingsWidget(QWidget):
         self.load_settings()
     
     def init_ui(self):
-        """Initialize UI components"""
+        """Initialize UI components with modern styling"""
         layout = QVBoxLayout()
+        layout.setSpacing(16)
+        
+        # Apply dark theme to settings
+        self.setStyleSheet("""
+            QGroupBox {
+                background-color: #1a1a2e;
+                border: 1px solid #2a2a4a;
+                border-radius: 12px;
+                margin-top: 12px;
+                padding: 16px;
+                font-weight: 600;
+                color: #ffffff;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 16px;
+                padding: 0 8px;
+                color: #9090b0;
+            }
+            QLabel {
+                color: #b0b0c0;
+            }
+            QComboBox {
+                background-color: #252540;
+                border: 1px solid #3a3a5a;
+                border-radius: 8px;
+                padding: 8px 12px;
+                min-height: 20px;
+                color: #e0e0e0;
+            }
+            QComboBox:hover {
+                border: 1px solid #6366f1;
+            }
+            QComboBox::drop-down {
+                border: none;
+                padding-right: 8px;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #252540;
+                border: 1px solid #3a3a5a;
+                selection-background-color: #6366f1;
+            }
+            QLineEdit {
+                background-color: #252540;
+                border: 1px solid #3a3a5a;
+                border-radius: 8px;
+                padding: 8px 12px;
+                color: #e0e0e0;
+            }
+            QLineEdit:focus {
+                border: 1px solid #6366f1;
+            }
+            QSpinBox {
+                background-color: #252540;
+                border: 1px solid #3a3a5a;
+                border-radius: 8px;
+                padding: 8px 12px;
+                color: #e0e0e0;
+            }
+            QSpinBox:focus {
+                border: 1px solid #6366f1;
+            }
+            QPushButton {
+                background-color: #2a2a4a;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: 500;
+                color: #e0e0e0;
+            }
+            QPushButton:hover {
+                background-color: #3a3a5a;
+            }
+            QPushButton:pressed {
+                background-color: #4a4a6a;
+            }
+        """)
+        
+        # OCR Settings - NEW SECTION
+        ocr_group = QGroupBox("🔍 OCR Settings (Text Recognition)")
+        ocr_layout = QFormLayout()
+        ocr_layout.setSpacing(12)
+        
+        self.ocr_engine_combo = QComboBox()
+        self.ocr_engine_combo.addItems([
+            'auto (Recommended - Auto-detect)',
+            'manga (MangaOCR - Best for Japanese)',
+            'tesseract (Tesseract - Other languages)'
+        ])
+        ocr_layout.addRow("OCR Engine:", self.ocr_engine_combo)
+        
+        ocr_note = QLabel("💡 MangaOCR is optimized for Japanese vertical & horizontal text")
+        ocr_note.setStyleSheet("font-size: 11px; color: #6a6a8a; padding: 4px 0;")
+        ocr_note.setWordWrap(True)
+        ocr_layout.addRow("", ocr_note)
+        
+        ocr_group.setLayout(ocr_layout)
+        layout.addWidget(ocr_group)
         
         # Translation Settings
-        trans_group = QGroupBox("Translation Settings")
+        trans_group = QGroupBox("🌐 Translation Settings")
         trans_layout = QFormLayout()
+        trans_layout.setSpacing(12)
         
         self.target_lang_combo = QComboBox()
         self.target_lang_combo.addItems([
@@ -96,7 +196,7 @@ class SettingsWidget(QWidget):
         trans_layout.addRow("Target Language:", self.target_lang_combo)
         
         self.backend_combo = QComboBox()
-        self.backend_combo.addItems(['ollama', 'google'])
+        self.backend_combo.addItems(['google', 'ollama'])  # Google first as default
         self.backend_combo.currentTextChanged.connect(self.on_backend_changed)
         trans_layout.addRow("Translation Backend:", self.backend_combo)
         
@@ -104,8 +204,9 @@ class SettingsWidget(QWidget):
         layout.addWidget(trans_group)
         
         # Ollama Settings
-        self.ollama_group = QGroupBox("Ollama Settings (Offline)")
+        self.ollama_group = QGroupBox("🤖 Ollama Settings (Offline Translation)")
         ollama_layout = QFormLayout()
+        ollama_layout.setSpacing(12)
         
         self.ollama_url_input = QLineEdit()
         self.ollama_url_input.setPlaceholderText("http://localhost:11434")
@@ -119,15 +220,15 @@ class SettingsWidget(QWidget):
         self.ollama_model_combo.setPlaceholderText("Select or enter model name")
         model_layout.addWidget(self.ollama_model_combo, 1)
         
-        refresh_btn = QPushButton("Refresh")
-        refresh_btn.setMaximumWidth(80)
+        refresh_btn = QPushButton("🔄 Refresh")
+        refresh_btn.setMaximumWidth(100)
         refresh_btn.clicked.connect(self.refresh_ollama_models)
         model_layout.addWidget(refresh_btn)
         
         ollama_layout.addRow("Model:", model_layout)
         
         # Test connection button
-        test_btn = QPushButton("Test Connection & Model")
+        test_btn = QPushButton("🧪 Test Connection & Model")
         test_btn.clicked.connect(self.test_ollama_connection)
         ollama_layout.addRow("", test_btn)
         
@@ -135,12 +236,13 @@ class SettingsWidget(QWidget):
         layout.addWidget(self.ollama_group)
         
         # Display Settings
-        display_group = QGroupBox("Display Settings")
+        display_group = QGroupBox("🎨 Display Settings")
         display_layout = QFormLayout()
+        display_layout.setSpacing(12)
         
         self.font_size_spin = QSpinBox()
-        self.font_size_spin.setRange(8, 32)
-        self.font_size_spin.setValue(14)
+        self.font_size_spin.setRange(10, 36)
+        self.font_size_spin.setValue(16)
         display_layout.addRow("Result Font Size:", self.font_size_spin)
         
         display_group.setLayout(display_layout)
@@ -148,12 +250,25 @@ class SettingsWidget(QWidget):
         
         # Buttons
         button_layout = QHBoxLayout()
+        button_layout.setSpacing(12)
         
-        save_btn = QPushButton("Save Settings")
+        save_btn = QPushButton("💾 Save Settings")
+        save_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #6366f1, stop:1 #8b5cf6);
+                color: white;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #7c7ff7, stop:1 #9d6ff9);
+            }
+        """)
         save_btn.clicked.connect(self.save_settings)
         button_layout.addWidget(save_btn)
         
-        reset_btn = QPushButton("Reset to Defaults")
+        reset_btn = QPushButton("↩️ Reset to Defaults")
         reset_btn.clicked.connect(self.reset_settings)
         button_layout.addWidget(reset_btn)
         
@@ -175,15 +290,22 @@ class SettingsWidget(QWidget):
         """Load settings from config"""
         config = self.config_manager.config
         
-        # Target language
-        target_lang = config.get('target_language', 'es')
+        # OCR Engine
+        ocr_engine = config.get('ocr_engine', 'auto')
+        for i in range(self.ocr_engine_combo.count()):
+            if self.ocr_engine_combo.itemText(i).startswith(ocr_engine):
+                self.ocr_engine_combo.setCurrentIndex(i)
+                break
+        
+        # Target language - default to English for Japanese translation use case
+        target_lang = config.get('target_language', 'en')
         for i in range(self.target_lang_combo.count()):
             if self.target_lang_combo.itemText(i).startswith(target_lang):
                 self.target_lang_combo.setCurrentIndex(i)
                 break
         
-        # Backend
-        backend = config.get('translation_backend', 'ollama')
+        # Backend - default to Google for better online translation
+        backend = config.get('translation_backend', 'google')
         self.backend_combo.setCurrentText(backend)
         
         # Ollama
@@ -197,17 +319,19 @@ class SettingsWidget(QWidget):
         self.ollama_model_combo.setCurrentText(saved_model)
         
         # Display
-        self.font_size_spin.setValue(config.get('result_font_size', 14))
+        self.font_size_spin.setValue(config.get('result_font_size', 16))
         
         # Show/hide groups
         self.on_backend_changed(backend)
     
     def save_settings(self):
         """Save settings to config"""
-        # Extract language code from combo box text
+        # Extract engine and language codes
+        ocr_engine = self.ocr_engine_combo.currentText().split(' ')[0]
         target_lang = self.target_lang_combo.currentText().split(' ')[0]
         
         updates = {
+            'ocr_engine': ocr_engine,
             'target_language': target_lang,
             'translation_backend': self.backend_combo.currentText(),
             'ollama_url': self.ollama_url_input.text(),
@@ -217,7 +341,7 @@ class SettingsWidget(QWidget):
         
         self.config_manager.update(updates)
         
-        QMessageBox.information(self, "Success", "Settings saved successfully!")
+        QMessageBox.information(self, "✓ Success", "Settings saved successfully!")
     
     def reset_settings(self):
         """Reset to default settings"""
@@ -232,7 +356,7 @@ class SettingsWidget(QWidget):
             self.config_manager.config = self.config_manager.load_config()
             self.config_manager.save_config()
             self.load_settings()
-            QMessageBox.information(self, "Success", "Settings reset to defaults!")
+            QMessageBox.information(self, "✓ Success", "Settings reset to defaults!")
     
     def refresh_ollama_models(self):
         """Refresh available Ollama models"""
@@ -248,11 +372,9 @@ class SettingsWidget(QWidget):
             if response.status_code == 200:
                 models = response.json().get('models', [])
                 if models:
-                    # Get the exact model names from Ollama
                     model_names = [m['name'] for m in models]
                     self.ollama_model_combo.addItems(model_names)
                     
-                    # Restore previous selection if it exists
                     if current_text:
                         index = self.ollama_model_combo.findText(current_text)
                         if index >= 0:
@@ -260,21 +382,18 @@ class SettingsWidget(QWidget):
                         else:
                             self.ollama_model_combo.setCurrentText(current_text)
                     elif model_names:
-                        # Select first model as default if nothing was selected
                         self.ollama_model_combo.setCurrentIndex(0)
                 else:
                     self.ollama_model_combo.setPlaceholderText("No models found - run 'ollama pull <model>'")
         except Exception as e:
-            # Silent fail - user can still enter model name manually
             self.ollama_model_combo.setPlaceholderText(f"Cannot connect - {str(e)[:30]}")
     
     def on_ollama_url_changed(self):
         """Called when Ollama URL changes"""
-        # Could auto-refresh here, but might be too aggressive
         pass
     
     def test_ollama_connection(self):
-        """Test Ollama connection and model availability (in background thread)"""
+        """Test Ollama connection and model availability"""
         url = self.ollama_url_input.text() or "http://localhost:11434"
         model = self.ollama_model_combo.currentText()
         
@@ -286,32 +405,26 @@ class SettingsWidget(QWidget):
             )
             return
         
-        # Disable button during test
         test_btn = self.sender()
         if test_btn:
             test_btn.setEnabled(False)
             test_btn.setText("Testing...")
         
-        # Show cursor as busy
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         
-        # Start background thread
         self.test_thread = OllamaTestThread(url, model)
         self.test_thread.finished.connect(lambda success, msg, models: self._on_test_complete(success, msg, models, test_btn))
         self.test_thread.start()
     
     def _on_test_complete(self, success, message, model_names, test_btn):
         """Handle test completion"""
-        # Restore cursor
         QApplication.restoreOverrideCursor()
         
-        # Re-enable button
         if test_btn:
             test_btn.setEnabled(True)
-            test_btn.setText("Test Connection & Model")
+            test_btn.setText("🧪 Test Connection & Model")
         
-        # Show result
         if success:
-            QMessageBox.information(self, "Test Successful", message)
+            QMessageBox.information(self, "✓ Test Successful", message)
         else:
-            QMessageBox.warning(self, "Test Failed", message)
+            QMessageBox.warning(self, "✗ Test Failed", message)
