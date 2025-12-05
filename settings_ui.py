@@ -159,13 +159,14 @@ class SettingsWidget(QWidget):
         
         self.ocr_engine_combo = QComboBox()
         self.ocr_engine_combo.addItems([
-            'auto (Recommended - Auto-detect)',
-            'manga (MangaOCR - Best for Japanese)',
+            'auto (Recommended - Best for general use)',
+            'windows (Windows OCR - UI/documents)',
+            'manga (MangaOCR - Manga speech bubbles)',
             'tesseract (Tesseract - Other languages)'
         ])
         ocr_layout.addRow("OCR Engine:", self.ocr_engine_combo)
         
-        ocr_note = QLabel("💡 MangaOCR is optimized for Japanese vertical & horizontal text")
+        ocr_note = QLabel("💡 Windows OCR works best for UI text and documents.\n    MangaOCR is for manga-style text in speech bubbles.")
         ocr_note.setStyleSheet("font-size: 11px; color: #6a6a8a; padding: 4px 0;")
         ocr_note.setWordWrap(True)
         ocr_layout.addRow("", ocr_note)

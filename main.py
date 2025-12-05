@@ -497,6 +497,15 @@ class MainWindow(QMainWindow):
         """Process captured image"""
         self.update_status("Processing with Manga OCR...", "info")
         
+        # DEBUG: Save captured image for inspection
+        try:
+            debug_path = "debug_capture.png"
+            image.save(debug_path)
+            print(f"DEBUG: Captured image saved to {debug_path}")
+            print(f"DEBUG: Image size: {image.size}, mode: {image.mode}")
+        except Exception as e:
+            print(f"DEBUG: Could not save debug image: {e}")
+        
         # Update engines with latest config
         ocr_engine_setting = self.config_manager.get('ocr_engine', 'auto')
         self.ocr_engine.set_engine(ocr_engine_setting)

@@ -4,25 +4,25 @@ REM Installation script for Windows
 echo Installing Screen Translation Application...
 echo.
 
-REM Check Python
-python --version >nul 2>&1
+REM Check py
+py --version >nul 2>&1
 if errorlevel 1 (
-    echo ERROR: Python is not installed or not in PATH
-    echo Please install Python 3.8 or higher from https://www.python.org/
+    echo ERROR: py is not installed or not in PATH
+    echo Please install py 3.8 or higher from https://www.py.org/
     pause
     exit /b 1
 )
 
-echo Python found!
+echo py found!
 echo.
 
 REM Create virtual environment (optional but recommended)
 echo Creating virtual environment...
-python -m venv venv
+py -m venv venv
 call venv\Scripts\activate.bat
 
 REM Install requirements
-echo Installing Python packages...
+echo Installing py packages...
 pip install -r requirements.txt
 
 echo.
@@ -39,6 +39,6 @@ echo 1. Download from: https://ollama.ai
 echo 2. Run: ollama pull gemma
 echo.
 echo To run the application:
-echo   python main.py
+echo   py main.py
 echo.
 pause

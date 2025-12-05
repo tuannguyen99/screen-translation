@@ -1,6 +1,7 @@
 pillow>=10.0.0
 pytesseract>=0.3.10
 manga-ocr>=0.1.8
+winocr>=0.0.8
 PyQt6>=6.5.0
 deep-translator>=1.11.4
 requests>=2.31.0
