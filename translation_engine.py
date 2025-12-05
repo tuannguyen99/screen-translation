@@ -44,12 +44,12 @@ class TranslationEngine:
             return f"Translation Error: {str(e)}"
     
     def _translate_google(self, text, target_lang):
-        """Translate using Google Translate (free googletrans library)"""
+        """Translate using Google Translate (free deep-translator library)"""
         try:
-            from googletrans import Translator
-            translator = Translator()
-            result = translator.translate(text, dest=target_lang)
-            return result.text
+            from deep_translator import GoogleTranslator
+            translator = GoogleTranslator(source='auto', target=target_lang)
+            result = translator.translate(text)
+            return result
         except Exception as e:
             return f"Google Translate Error: {str(e)}"
     

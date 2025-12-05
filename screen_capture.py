@@ -100,8 +100,23 @@ class ScreenSelector(QWidget):
             rect = QRect(self.begin, self.end).normalized()
             
             if rect.width() > 10 and rect.height() > 10:
-                # Crop screenshot to selected area
-                self.selected_area = self.screenshot.copy(rect)
+                # Get device pixel ratio for DPI scaling
+                # On Windows with display scaling (125%, 150%, etc.),
+                # mouse coordinates are in logical pixels but the screenshot
+                # is in physical pixels, so we need to scale the rectangle
+                screen = QApplication.primaryScreen()
+                dpr = screen.devicePixelRatio()
+                
+                # Scale rectangle coordinates to match screenshot pixel coordinates
+                scaled_rect = QRect(
+                    int(rect.x() * dpr),
+                    int(rect.y() * dpr),
+                    int(rect.width() * dpr),
+                    int(rect.height() * dpr)
+                )
+                
+                # Crop screenshot to selected area using scaled coordinates
+                self.selected_area = self.screenshot.copy(scaled_rect)
                 
             self.hide()
             
