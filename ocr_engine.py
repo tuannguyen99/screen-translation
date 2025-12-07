@@ -1,6 +1,6 @@
 """
 OCR module with multiple engines:
-- Windows OCR (winocr) - Best for general Japanese text (UI, documents)
+- Windows OCR (winocr) - Best for general text (Japanese, English, etc.)
 - Manga OCR - Best for manga-style text (speech bubbles, stylized fonts)
 - Tesseract - Fallback for other languages
 """
@@ -18,8 +18,13 @@ class OCREngine:
     ENGINE_MANGA_OCR = 'manga'     # Manga OCR - best for manga-style text
     ENGINE_TESSERACT = 'tesseract' # Tesseract - fallback
     
-    def __init__(self, engine='auto'):
+    # OCR source language
+    LANG_JAPANESE = 'ja'
+    LANG_ENGLISH = 'en'
+    
+    def __init__(self, engine='auto', source_lang='ja'):
         self.engine = engine
+        self.source_lang = source_lang  # Language to recognize
         self._manga_ocr = None
         self._manga_ocr_loading = False
         
@@ -37,6 +42,10 @@ class OCREngine:
     def set_engine(self, engine):
         """Set OCR engine"""
         self.engine = engine
+    
+    def set_source_language(self, lang):
+        """Set source language for OCR (ja=Japanese, en=English)"""
+        self.source_lang = lang
     
     def _get_manga_ocr(self):
         """Lazy load Manga OCR model"""
@@ -89,7 +98,7 @@ class OCREngine:
             elif self.engine == self.ENGINE_TESSERACT:
                 return self._extract_with_tesseract(image)
             else:  # AUTO - try engines in order of reliability
-                # Try Windows OCR first (best for general Japanese)
+                # Try Windows OCR first (best for general text)
                 result = self._extract_with_windows_ocr(image)
                 if result and not result.startswith("OCR Error"):
                     return result
@@ -97,14 +106,16 @@ class OCREngine:
                 result = self._extract_with_tesseract(image)
                 if result and result.strip() and not result.startswith("OCR Error"):
                     return result
-                # Final fallback to Manga OCR (only good for manga)
-                return self._extract_with_manga_ocr(image)
+                # Final fallback to Manga OCR (only good for Japanese manga)
+                if self.source_lang == self.LANG_JAPANESE:
+                    return self._extract_with_manga_ocr(image)
+                return result
                 
         except Exception as e:
             return f"OCR Error: {str(e)}"
     
     def _extract_with_windows_ocr(self, image):
-        """Extract text using Windows OCR (best for general Japanese text)"""
+        """Extract text using Windows OCR"""
         try:
             import winocr
             import asyncio
@@ -113,8 +124,10 @@ class OCREngine:
             processed = self._preprocess_image(image)
             
             # Windows OCR is async, need to run in event loop
+            lang = self.source_lang  # 'ja' for Japanese, 'en' for English
+            
             async def do_ocr():
-                result = await winocr.recognize_pil(processed, 'ja')  # Japanese
+                result = await winocr.recognize_pil(processed, lang)
                 return result
             
             # Run async OCR
@@ -130,7 +143,6 @@ class OCREngine:
             if result and hasattr(result, 'text'):
                 return result.text.strip()
             elif result:
-                # Result might be a dict or have 'lines' attribute
                 if hasattr(result, 'lines'):
                     return '\n'.join([line.text for line in result.lines]).strip()
                 return str(result).strip()
@@ -139,10 +151,16 @@ class OCREngine:
         except ImportError:
             return "OCR Error: winocr not installed. Run: pip install winocr"
         except Exception as e:
-            return f"OCR Error (Windows OCR): {str(e)}"
+            error_msg = str(e)
+            # Provide helpful message for missing language pack
+            if "Language.OCR" in error_msg or "not installed" in error_msg.lower():
+                lang_name = "Japanese (ja-JP)" if self.source_lang == 'ja' else "English (en-US)"
+                lang_code = "ja-JP" if self.source_lang == 'ja' else "en-US"
+                return f"OCR Error: {lang_name} OCR not installed.\n\nRun as Administrator:\nAdd-WindowsCapability -Online -Name \"Language.OCR~~~{lang_code}~0.0.1.0\""
+            return f"OCR Error (Windows OCR): {error_msg}"
     
     def _extract_with_manga_ocr(self, image):
-        """Extract text using Manga OCR (optimized for manga-style text)"""
+        """Extract text using Manga OCR (optimized for Japanese manga)"""
         try:
             manga_ocr = self._get_manga_ocr()
             if manga_ocr is None:
@@ -160,7 +178,11 @@ class OCREngine:
             processed = self._preprocess_image(image)
             
             if lang is None:
-                lang = 'jpn+jpn_vert+eng'
+                # Use appropriate language based on source setting
+                if self.source_lang == self.LANG_JAPANESE:
+                    lang = 'jpn+jpn_vert+eng'
+                else:
+                    lang = 'eng'
             
             text = pytesseract.image_to_string(
                 processed,

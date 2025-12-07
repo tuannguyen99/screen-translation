@@ -179,16 +179,26 @@ class SettingsWidget(QWidget):
         trans_layout = QFormLayout()
         trans_layout.setSpacing(12)
         
+        # Source language (what to recognize)
+        self.source_lang_combo = QComboBox()
+        self.source_lang_combo.addItems([
+            'ja (Japanese → translate to English)',
+            'en (English → translate to Japanese)'
+        ])
+        self.source_lang_combo.currentIndexChanged.connect(self.on_source_lang_changed)
+        trans_layout.addRow("Source Language:", self.source_lang_combo)
+        
+        # Target language (what to translate to)
         self.target_lang_combo = QComboBox()
         self.target_lang_combo.addItems([
             'en (English)',
+            'ja (Japanese)',
             'es (Spanish)',
             'fr (French)',
             'de (German)',
             'it (Italian)',
             'pt (Portuguese)',
             'ru (Russian)',
-            'ja (Japanese)',
             'ko (Korean)',
             'zh (Chinese)',
             'ar (Arabic)',
@@ -287,6 +297,15 @@ class SettingsWidget(QWidget):
         if backend == 'ollama':
             self.refresh_ollama_models()
     
+    def on_source_lang_changed(self, index):
+        """Auto-set target language when source language changes"""
+        if index == 0:  # Japanese source
+            # Set target to English
+            self.target_lang_combo.setCurrentIndex(0)  # English
+        else:  # English source
+            # Set target to Japanese
+            self.target_lang_combo.setCurrentIndex(1)  # Japanese
+    
     def load_settings(self):
         """Load settings from config"""
         config = self.config_manager.config
@@ -298,7 +317,14 @@ class SettingsWidget(QWidget):
                 self.ocr_engine_combo.setCurrentIndex(i)
                 break
         
-        # Target language - default to English for Japanese translation use case
+        # Source language - default to Japanese
+        source_lang = config.get('source_language', 'ja')
+        for i in range(self.source_lang_combo.count()):
+            if self.source_lang_combo.itemText(i).startswith(source_lang):
+                self.source_lang_combo.setCurrentIndex(i)
+                break
+        
+        # Target language - default to English
         target_lang = config.get('target_language', 'en')
         for i in range(self.target_lang_combo.count()):
             if self.target_lang_combo.itemText(i).startswith(target_lang):
@@ -329,10 +355,12 @@ class SettingsWidget(QWidget):
         """Save settings to config"""
         # Extract engine and language codes
         ocr_engine = self.ocr_engine_combo.currentText().split(' ')[0]
+        source_lang = self.source_lang_combo.currentText().split(' ')[0]
         target_lang = self.target_lang_combo.currentText().split(' ')[0]
         
         updates = {
             'ocr_engine': ocr_engine,
+            'source_language': source_lang,
             'target_language': target_lang,
             'translation_backend': self.backend_combo.currentText(),
             'ollama_url': self.ollama_url_input.text(),

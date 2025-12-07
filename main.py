@@ -495,7 +495,14 @@ class MainWindow(QMainWindow):
     
     def process_image(self, image):
         """Process captured image"""
-        self.update_status("Processing with Manga OCR...", "info")
+        # Get source language for appropriate status message
+        source_lang = self.config_manager.get('source_language', 'ja')
+        target_lang = self.config_manager.get('target_language', 'en')
+        
+        if source_lang == 'ja':
+            self.update_status("Extracting Japanese text...", "info")
+        else:
+            self.update_status("Extracting English text...", "info")
         
         # DEBUG: Save captured image for inspection
         try:
@@ -509,6 +516,7 @@ class MainWindow(QMainWindow):
         # Update engines with latest config
         ocr_engine_setting = self.config_manager.get('ocr_engine', 'auto')
         self.ocr_engine.set_engine(ocr_engine_setting)
+        self.ocr_engine.set_source_language(source_lang)  # Set source language for OCR
         
         self.translation_engine.config = self.config_manager.config
         self.translation_engine.backend = self.config_manager.get('translation_backend', 'google')
@@ -518,7 +526,7 @@ class MainWindow(QMainWindow):
             image,
             self.ocr_engine,
             self.translation_engine,
-            self.config_manager.get('target_language', 'en')
+            target_lang
         )
         self.processing_thread.progress.connect(lambda msg: self.update_status(msg, "info"))
         self.processing_thread.finished.connect(self.on_processing_complete)
