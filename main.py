@@ -117,7 +117,7 @@ class MainWindow(QMainWindow):
         
         # Initialize components
         self.config_manager = ConfigManager()
-        self.ocr_engine = OCREngine(engine='auto')  # Auto: MangaOCR for Japanese
+        self.ocr_engine = OCREngine(engine='auto')  # Auto: Windows OCR or Manga OCR
         self.translation_engine = TranslationEngine(self.config_manager.config)
         self.screen_selector = ScreenSelector()
         
@@ -129,10 +129,11 @@ class MainWindow(QMainWindow):
         
         self.init_ui()
         self.setup_shortcuts()
+        self.update_language_labels()  # Set labels based on config
         
     def init_ui(self):
         """Initialize modern UI"""
-        self.setWindowTitle("📖 Japanese Screen Translator")
+        self.setWindowTitle("📖 Screen Translator")
         self.setGeometry(100, 100, 1000, 750)
         
         # Dark theme with gradient accents
@@ -230,14 +231,14 @@ class MainWindow(QMainWindow):
         header_layout = QHBoxLayout()
         header_layout.setContentsMargins(0, 0, 0, 0)
         
-        title = QLabel("Japanese Screen Translator")
-        title.setStyleSheet("""
+        self.title_label = QLabel("English ↔ Japanese Screen Translator")
+        self.title_label.setStyleSheet("""
             font-size: 24px;
             font-weight: 700;
             color: #ffffff;
             padding: 8px 0;
         """)
-        header_layout.addWidget(title)
+        header_layout.addWidget(self.title_label)
         
         header_layout.addStretch()
         
@@ -338,16 +339,16 @@ class MainWindow(QMainWindow):
         splitter = QSplitter(Qt.Orientation.Vertical)
         splitter.setHandleWidth(8)
         
-        # Original text (Japanese)
+        # Original text box (dynamically labeled)
         original_group = QWidget()
         original_layout = QVBoxLayout()
         original_layout.setContentsMargins(0, 0, 0, 0)
         original_layout.setSpacing(8)
         
         original_header = QHBoxLayout()
-        original_label = QLabel("🇯🇵 Original Japanese Text")
-        original_label.setStyleSheet("font-weight: 600; font-size: 14px; color: #9090b0;")
-        original_header.addWidget(original_label)
+        self.original_label = QLabel("🇯🇵 Original Japanese Text")
+        self.original_label.setStyleSheet("font-weight: 600; font-size: 14px; color: #9090b0;")
+        original_header.addWidget(self.original_label)
         original_header.addStretch()
         
         copy_original_btn = QPushButton("📋 Copy")
@@ -371,16 +372,16 @@ class MainWindow(QMainWindow):
         original_group.setLayout(original_layout)
         splitter.addWidget(original_group)
         
-        # Translated text (English)
+        # Translated text box (dynamically labeled)
         translated_group = QWidget()
         translated_layout = QVBoxLayout()
         translated_layout.setContentsMargins(0, 0, 0, 0)
         translated_layout.setSpacing(8)
         
         translated_header = QHBoxLayout()
-        translated_label = QLabel("🇬🇧 English Translation")
-        translated_label.setStyleSheet("font-weight: 600; font-size: 14px; color: #9090b0;")
-        translated_header.addWidget(translated_label)
+        self.translated_label = QLabel("🇬🇧 English Translation")
+        self.translated_label.setStyleSheet("font-weight: 600; font-size: 14px; color: #9090b0;")
+        translated_header.addWidget(self.translated_label)
         translated_header.addStretch()
         
         copy_translated_btn = QPushButton("📋 Copy")
@@ -440,6 +441,40 @@ class MainWindow(QMainWindow):
         # Escape to cancel
         escape_shortcut = QShortcut(QKeySequence("Escape"), self)
         escape_shortcut.activated.connect(self.cancel_capture)
+    
+    def update_language_labels(self):
+        """Update UI labels based on source/target language settings"""
+        source_lang = self.config_manager.get('source_language', 'ja')
+        target_lang = self.config_manager.get('target_language', 'en')
+        
+        # Language display names and flags
+        lang_info = {
+            'ja': ('🇯🇵', 'Japanese'),
+            'en': ('🇬🇧', 'English'),
+            'es': ('🇪🇸', 'Spanish'),
+            'fr': ('🇫🇷', 'French'),
+            'de': ('🇩🇪', 'German'),
+            'it': ('🇮🇹', 'Italian'),
+            'pt': ('🇵🇹', 'Portuguese'),
+            'ru': ('🇷🇺', 'Russian'),
+            'ko': ('🇰🇷', 'Korean'),
+            'zh': ('🇨🇳', 'Chinese'),
+            'ar': ('🇸🇦', 'Arabic'),
+            'hi': ('🇮🇳', 'Hindi'),
+        }
+        
+        source_flag, source_name = lang_info.get(source_lang, ('🌐', source_lang.upper()))
+        target_flag, target_name = lang_info.get(target_lang, ('🌐', target_lang.upper()))
+        
+        # Update original text label
+        self.original_label.setText(f"{source_flag} Original {source_name} Text")
+        
+        # Update translated text label
+        self.translated_label.setText(f"{target_flag} {target_name} Translation")
+        
+        # Update placeholder text
+        self.original_text.setPlaceholderText(f"Original {source_name} text will appear here...")
+        self.translated_text.setPlaceholderText(f"{target_name} translation will appear here...")
     
     def start_capture(self):
         """Start screen capture"""
