@@ -64,6 +64,9 @@ class OllamaTestThread(QThread):
 class SettingsWidget(QWidget):
     """Settings configuration UI with modern dark theme"""
     
+    # Signal emitted when settings are saved
+    settings_changed = pyqtSignal()
+    
     def __init__(self, config_manager):
         super().__init__()
         self.config_manager = config_manager
@@ -369,6 +372,9 @@ class SettingsWidget(QWidget):
         }
         
         self.config_manager.update(updates)
+        
+        # Notify listeners that settings changed
+        self.settings_changed.emit()
         
         QMessageBox.information(self, "✓ Success", "Settings saved successfully!")
     

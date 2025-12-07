@@ -212,6 +212,7 @@ class MainWindow(QMainWindow):
         
         # Settings tab
         self.settings_widget = SettingsWidget(self.config_manager)
+        self.settings_widget.settings_changed.connect(self.update_language_labels)  # Live refresh
         tabs.addTab(self.settings_widget, "⚙️ Settings")
         
         # Layout
